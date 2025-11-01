@@ -3,14 +3,15 @@ import serial.tools.list_ports
 import sys
 import threading
 
-def find_arduino_port():
+def list_arduino_ports():
+    ports = []
     for port in serial.tools.list_ports.comports():
         if ("Arduino" in port.description
             or "usbmodem" in port.device
             or "usbserial" in port.device
             or "wchusbserial" in port.device):
-            return port.device
-    return None
+            ports.append(port.device)
+    return ports
 
 def read_from_arduino(ser):
     while True:
@@ -19,24 +20,47 @@ def read_from_arduino(ser):
             print(f"[ARDUINO] {line}")
 
 def main():
-    port = find_arduino_port()
-    if not port:
-        print("No arduino found.")
+    ports = list_arduino_ports()
+    if not ports:
+        print("❌ No Arduino devices found.")
         sys.exit(1)
-    
-    print(f"Connected to {port}")
-    ser = serial.Serial(port, 115200, timeout=1)
-    
-    threading.Thread(target=read_from_arduino, args=(ser, ), daemon=True).start()
-    
-    print("Type messages to send. Ctrl+C to exit. \n")
+
+    # automatic if only one
+    if len(ports) == 1:
+        port = ports[0]
+        print(f"✅ Automatically selected {port}")
+    else:
+        print("Multiple Arduinos detected:\n")
+        for i, p in enumerate(ports):
+            print(f"  [{i}] {p}")
+        choice = input("\nSelect device number: ")
+        try:
+            port = ports[int(choice)]
+        except (ValueError, IndexError):
+            print("Invalid choice.")
+            sys.exit(1)
+
+    print(f"🔌 Connecting to {port} at 115200 baud...")
+    try:
+        ser = serial.Serial(port, 115200, timeout=1)
+    except serial.SerialException as e:
+        print(f"Failed to open {port}: {e}")
+        sys.exit(1)
+
+    threading.Thread(target=read_from_arduino, args=(ser,), daemon=True).start()
+
+    print("Type messages to send. Ctrl+C to exit.\n")
     try:
         while True:
             msg = input("> ")
-            ser.write((msg + "\n").encode())
+            if msg.startswith("m[") and "\\0" in msg:
+                msg = msg.replace("\\0", "\x00")
+            ser.write((msg + "\n").encode("latin1"))
+            if msg.strip().lower() == "clear":
+                print("\033c", end="")
     except KeyboardInterrupt:
+        print(f"\n🔌 Disconnected from {port}")
         ser.close()
-        print("\nDisconnected")
 
 if __name__ == "__main__":
     main()
