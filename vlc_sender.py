@@ -150,7 +150,7 @@ def main():
     dest = input("Destination (default BB): ").strip().upper() or "BB"
     ser.write(f"a[{addr}]\n".encode())
 
-    total_packets = 25
+    total_packets = 50
     delay_ms = 10.0
     test_payloads = [1, 100, 180]
 

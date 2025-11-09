@@ -48,6 +48,11 @@ def main():
         sys.exit(1)
 
     threading.Thread(target=read_from_arduino, args=(ser,), daemon=True).start()
+    
+    ser.write(b"r\n");
+    ser.write(b"c[1,0,3]"); ser.write(b"c[1,1,0]"); ser.write(b"c[1,2,1]")
+    ser.write(b"c[1,3,1]"); ser.write(b"c[0,3,1]"); ser.write(b"c[0,1,0]")
+    ser.write(b"c[0,2,255]")
 
     print("Type messages to send. Ctrl+C to exit.\n")
     try:
