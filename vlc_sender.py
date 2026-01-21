@@ -3,9 +3,7 @@ import serial, serial.tools.list_ports, sys, threading, time, csv, os, itertools
 from datetime import datetime
 from collections import deque
 
-# --------------------------------------------------
 #  auto-detect the arduino ports
-# --------------------------------------------------
 def list_arduino_ports():
     return [
         p.device for p in serial.tools.list_ports.comports()
@@ -15,9 +13,7 @@ def list_arduino_ports():
             or "wchusbserial" in p.device)
     ]
 
-# --------------------------------------------------
 #  background reader — collects delivery messages
-# --------------------------------------------------
 def reader_thread(ser, flag):
     q = flag["rx"]
     while not flag["stop"]:
@@ -31,9 +27,7 @@ def reader_thread(ser, flag):
         except serial.SerialException:
             break
 
-# --------------------------------------------------
 #  CSV helper
-# --------------------------------------------------
 def make_logger(payload_size):
     os.makedirs("logs", exist_ok=True)
     now = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -43,14 +37,12 @@ def make_logger(payload_size):
     w.writerow(["seq","t_send","t_ack","rtt_ms","status","payload_B","throughput_Bps"])
     return f, w, fname
 
-# --------------------------------------------------
 #  single experiment
-# --------------------------------------------------
 def run_test(addr, dest, payload_B, total_packets, ser, delay_ms, flag):
     msg = b"m[" + (b"X" * payload_B) + b"\x00," + dest.encode("ascii") + b"]\n"
 
     f, w, path = make_logger(payload_B)
-    print(f"\n=== 🚀 {payload_B}-byte payload test — logging to {path} ===")
+    print(f"\n=== {payload_B}-byte payload test — logging to {path} ===")
     spinner = itertools.cycle("⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏")
 
     sent = 0
@@ -108,32 +100,30 @@ def run_test(addr, dest, payload_B, total_packets, ser, delay_ms, flag):
                 sys.stdout.flush()
                 last_update = now
 
-        print(f"\r✅ Done — {delivered}/{total_packets} packets delivered.")
+        print(f"\rDone — {delivered}/{total_packets} packets delivered.")
     except KeyboardInterrupt:
-        print("\n🛑 Interrupted.")
+        print("\nInterrupted.")
     finally:
         if t_first and t_last:
             duration = t_last - t_first
             thr = (payload_B * delivered) / duration
-            print(f"   ⏱️  Duration: {duration:.2f}s   ⚡ Throughput: {thr:.1f} B/s")
+            print(f"   Duration: {duration:.2f}s   ⚡ Throughput: {thr:.1f} B/s")
         f.close()
         time.sleep(0.5)
 
 
-# --------------------------------------------------
 #  main
-# --------------------------------------------------
 def main():
     ports = list_arduino_ports()
     if not ports:
-        sys.exit("❌ No Arduino devices found.")
+        sys.exit("No Arduino devices found.")
     port = ports[0] if len(ports) == 1 else None
     if not port:
         for i, p in enumerate(ports):
             print(f"  [{i}] {p}")
         port = ports[int(input("Select number: "))]
 
-    print(f"🔌 Connecting to {port} at 115200 baud…")
+    print(f"Connecting to {port} at 115200 baud…")
     try:
         ser = serial.Serial(port, 115200, timeout=0.1)
     except serial.SerialException as e:
@@ -163,7 +153,7 @@ def main():
     finally:
         flag["stop"] = True
         ser.close()
-        print("\n🏁 All tests complete. Logs saved in ./logs/")
+        print("\nAll tests complete. Logs saved in ./logs/")
         
 
 if __name__ == "__main__":

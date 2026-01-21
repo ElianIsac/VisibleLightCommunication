@@ -22,13 +22,13 @@ def read_from_arduino(ser):
 def main():
     ports = list_arduino_ports()
     if not ports:
-        print("❌ No Arduino devices found.")
+        print("No Arduino devices found.")
         sys.exit(1)
 
     # automatic if only one
     if len(ports) == 1:
         port = ports[0]
-        print(f"✅ Automatically selected {port}")
+        print(f"Automatically selected {port}")
     else:
         print("Multiple Arduinos detected:\n")
         for i, p in enumerate(ports):
@@ -40,7 +40,7 @@ def main():
             print("Invalid choice.")
             sys.exit(1)
 
-    print(f"🔌 Connecting to {port} at 115200 baud...")
+    print(f"Connecting to {port} at 115200 baud...")
     try:
         ser = serial.Serial(port, 115200, timeout=1)
     except serial.SerialException as e:
@@ -64,7 +64,7 @@ def main():
             if msg.strip().lower() == "clear":
                 print("\033c", end="")
     except KeyboardInterrupt:
-        print(f"\n🔌 Disconnected from {port}")
+        print(f"\nDisconnected from {port}")
         ser.close()
 
 if __name__ == "__main__":

@@ -26,7 +26,7 @@ def load_all_logs():
     # Recursively find CSVs in all ./logs/run*/ folders
     files = sorted(glob.glob("logs/run*/**/*.csv", recursive=True))
     if not files:
-        print("❌ No CSV files found in ./logs/run*/")
+        print("No CSV files found in ./logs/run*/")
         return []
     
     datasets = []
@@ -54,7 +54,7 @@ def plot_pdf_cdf(df, outdir):
     """Smooth PDF and CDF of RTTs on shared x-axis."""
     delays = df["rtt_ms"].astype(float).dropna()
     if len(delays) < 5:
-        print(f"⚠️ Not enough data points for smooth PDF/CDF in {outdir}")
+        print(f"Not enough data points for smooth PDF/CDF in {outdir}")
         return
 
     # Smooth density estimate
@@ -171,7 +171,7 @@ def plot_summary_with_ci(df, outdir):
         "ci_low": [ci_thr[0], ci_delay[0]],
         "ci_high": [ci_thr[1], ci_delay[1]]
     })
-    print(f"\n📊 Stats for {os.path.basename(outdir)}:")
+    print(f"\nStats for {os.path.basename(outdir)}:")
     print(stats.round(2))
 
     # simple bar summary
@@ -213,7 +213,7 @@ def plot_delay_per_byte_vs_payload(datasets, outdir):
 def main():
     run_dirs = sorted(glob.glob("logs/run*"))
     if not run_dirs:
-        print("❌ No run folders found in ./logs/")
+        print("No run folders found in ./logs/")
         return
 
     for run_path in run_dirs:
@@ -224,7 +224,7 @@ def main():
         # Load all CSVs inside this run folder
         files = sorted(glob.glob(os.path.join(run_path, "*.csv")))
         if not files:
-            print(f"⚠️ No CSV files found in {run_path}")
+            print(f"No CSV files found in {run_path}")
             continue
 
         datasets = []
@@ -242,18 +242,15 @@ def main():
             payload = df["payload_B"].iloc[0]
             payload_dir = os.path.join(outdir, f"{payload}B")
             make_dir(payload_dir)
-            print(f"🧪 {run_name}: payload={payload}B → {payload_dir}")
+            print(f"{run_name}: payload={payload}B → {payload_dir}")
             plot_pdf_cdf(df, payload_dir)
             plot_throughput_delay_time(df, payload_dir)
             plot_summary_with_ci(df, payload_dir)
 
         plot_throughput_vs_payload(datasets, outdir)
         plot_delay_per_byte_vs_payload(datasets, outdir)
-        print(f"✅ Finished {run_name}, saved in {outdir}/")
+        print(f"Finished {run_name}, saved in {outdir}/")
 
 if __name__ == "__main__":
     main()
 
-
-if __name__ == "__main__":
-    main()
